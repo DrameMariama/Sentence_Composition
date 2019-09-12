@@ -1,7 +1,18 @@
 import pandas as pd
 import json
-def get_sentence_pairs(filename):
-    df = pd.DataFrame(columns=['Complex_sentence_index' ,'Simple_sentence_1', 'Simple_sentence_2', 'Complex_sentence']) #will contain our new dataset
+def get_sentence_pairs(filename, train_dev_test_file):
+    #df = pd.DataFrame(columns=['Complex_sentence_index' ,'Simple_sentence_1', 'Simple_sentence_2', 'Complex_sentence']) #will contain our new dataset
+    with open(train_dev_test_file, 'r') as f_split:
+        data_split = json.loads(f_split.read())
+    train = data_split['TRAIN']
+    val = data_split['VALIDATION']
+    test = data_split['TEST']
+    n_train_examples = 0
+    n_test_examples = 0
+    n_val_examples = 0
+    train_data  = pd.DataFrame(columns=['Complex_sentence_index' ,'Simple_sentence_1', 'Simple_sentence_2', 'Complex_sentence'])
+    val_data = pd.DataFrame(columns=['Complex_sentence_index' ,'Simple_sentence_1', 'Simple_sentence_2', 'Complex_sentence'])
+    test_data = pd.DataFrame(columns=['Complex_sentence_index' ,'Simple_sentence_1', 'Simple_sentence_2', 'Complex_sentence'])
     with open(filename, 'r') as f:
         f = iter(f)  #transform f to an iterable object
         i = 1     #to trck the number of complex sentence
@@ -28,7 +39,18 @@ def get_sentence_pairs(filename):
                         #print(j, k)
                         if k == 2:  # to consider  complex sentences that are splitted only into two simple sentences
                          #   print(next_line1.replace('\n', ''))
-                            df = df.append({'Complex_sentence_index':i, 'Simple_sentence_1': sentences[0], 'Simple_sentence_2': sentences[1], 'Complex_sentence': complex_sentence}, ignore_index=True)
+                            if i in train:
+                                print('in Train')
+                                n_train_examples += 1
+                                train_data = train_data.append({'Complex_sentence_index':i, 'Simple_sentence_1': sentences[0], 'Simple_sentence_2': sentences[1], 'Complex_sentence': complex_sentence}, ignore_index=True)
+                            elif i in val:
+                                print('in validation')
+                                n_val_examples += 1
+                                val_data = val_data.append({'Complex_sentence_index':i, 'Simple_sentence_1': sentences[0], 'Simple_sentence_2': sentences[1], 'Complex_sentence': complex_sentence}, ignore_index=True)
+                            else:
+                                print('in test')
+                                n_test_examples += 1
+                                test_data = test_data.append({'Complex_sentence_index':i, 'Simple_sentence_1': sentences[0], 'Simple_sentence_2': sentences[1], 'Complex_sentence': complex_sentence}, ignore_index=True)
                         j += 1
                     next_line = f.readline()
                     #print(next_line)
@@ -38,7 +60,7 @@ def get_sentence_pairs(filename):
                 i += 1
             if line == '' or line == '\n' or line == ' ':
                 break
-    return df
+    return train_data, val_data, test_data, n_train_examples, n_val_examples ,n_test_examples
 
 def get_all_sentences(filename):
     with open(filename, 'r') as f:
@@ -89,10 +111,14 @@ def get_all_sentences(filename):
             json.dump(json_list, f1, ensure_ascii=False, indent=4)
 
 if __name__ == '__main__':
-    filename = 'output.txt'
-    df = get_sentence_pairs(filename)
-    df.to_csv('two_sentences_composition.csv')
-    get_all_sentences(filename)
-    with open('complete_data.json') as data_file:
-        data = json.loads(data_file.read())
-    print(len(data))
+    filename = '../output.txt'
+    splited_file = '../Split-train-dev-test.benchmark-v1.0.json'
+    train_data, val_data, test_data, n_train_examples, n_val_examples ,n_test_examples = get_sentence_pairs(filename, splited_file)
+    train_data.to_csv('train_data.csv')
+    test_data.to_csv('test_data.csv')
+    val_data.to_csv('val_data.csv')
+    print(n_train_examples, '\n', n_val_examples , '\n', n_test_examples)
+    #get_all_sentences(filename)
+    #ith open('complete_data.json') as data_file:
+      #  data = json.loads(data_file.read())
+    #print(len(data))
