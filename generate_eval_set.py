@@ -22,7 +22,7 @@ def generate_eval_data(n, testset):
     return new_test_data
 if __name__ == "__main__":
     testdata = pd.read_csv('test_data.csv')
-    n = 5
+    n = 10
     new_test_data = generate_eval_data(n, testdata)
     new_test_data.to_csv('new_test_data.csv')
     print(new_test_data)
